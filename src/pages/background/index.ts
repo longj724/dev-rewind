@@ -50,7 +50,6 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 });
 
 const startRecording = async (type: RecordingType) => {
-  console.log('start recording', type);
   updateRecording(true, type);
   // chrome.action.setIcon({ path: '../../public/recording.png' });
   if (type === 'tab') {
@@ -65,17 +64,14 @@ const stopRecording = async () => {
 };
 
 const recordTabState = async (start = true) => {
-  // Setup offscreen document
   const existingContexts = await chrome.runtime.getContexts({});
   const offscreenDocument = existingContexts.find(
     (c) => c.contextType === 'OFFSCREEN_DOCUMENT'
   );
 
   if (!offscreenDocument) {
-    console.log('creating offscreen document');
-    // Create an offscreen document
     await chrome.offscreen.createDocument({
-      url: 'offscreen.html',
+      url: 'src/pages/background/offscreen.html',
       reasons: [
         chrome.offscreen.Reason.USER_MEDIA,
         chrome.offscreen.Reason.DISPLAY_MEDIA,
@@ -86,23 +82,23 @@ const recordTabState = async (start = true) => {
 
   if (start) {
     const tab = await chrome.tabs.query({ active: true, currentWindow: true });
-    console.log('tab', tab);
-    if (!tab) return;
+    if (!tab || !tab[0].id) return;
 
     const tabId = tab[0].id;
 
-    const exists = await chrome.offscreen.hasDocument();
-    console.log('offscreen document exists', exists);
+    // const exists = await chrome.offscreen.hasDocument();
+    // console.log('offscreen document exists', exists);
 
     chrome.tabCapture.getMediaStreamId(
-      { targetTabId: tabId }, // Specify the target tab ID
+      { targetTabId: tabId },
       async (streamId) => {
-        await chrome.runtime.sendMessage({
+        const res = await chrome.runtime.sendMessage({
           type: 'start-recording',
           target: 'offscreen',
-          recordingType: 'tab',
-          data: streamId,
+          recordType: 'tab',
+          streamId,
         });
+        console.log('offscreen message response', res);
       }
     );
   } else {

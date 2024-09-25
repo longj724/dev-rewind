@@ -20,6 +20,7 @@
     "128": "public/icon-128.png"
   },
   "permissions": [
+    "activeTab",
     "tabCapture",
     "offscreen",
     "scripting",

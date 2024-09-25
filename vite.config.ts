@@ -18,26 +18,30 @@ const isDev = process.env.__DEV__ === 'true';
 
 const extensionManifest = {
   ...manifest,
-  ...(isDev ? devManifest : {} as ManifestV3Export),
-  name: isDev ? `DEV: ${ manifest.name }` : manifest.name,
+  ...(isDev ? devManifest : ({} as ManifestV3Export)),
+  name: isDev ? `DEV: ${manifest.name}` : manifest.name,
   version: pkg.version,
 };
 
 // plugin to remove dev icons from prod build
-function stripDevIcons (apply: boolean) {
-  if (apply) return null
+function stripDevIcons(apply: boolean) {
+  if (apply) return null;
 
   return {
     name: 'strip-dev-icons',
-    resolveId (source: string) {
-      return source === 'virtual-module' ? source : null
+    resolveId(source: string) {
+      return source === 'virtual-module' ? source : null;
     },
-    renderStart (outputOptions: any, inputOptions: any) {
-      const outDir = outputOptions.dir
-      fs.rm(resolve(outDir, 'dev-icon-32.png'), () => console.log(`Deleted dev-icon-32.png frm prod build`))
-      fs.rm(resolve(outDir, 'dev-icon-128.png'), () => console.log(`Deleted dev-icon-128.png frm prod build`))
-    }
-  }
+    renderStart(outputOptions: any, inputOptions: any) {
+      const outDir = outputOptions.dir;
+      fs.rm(resolve(outDir, 'dev-icon-32.png'), () =>
+        console.log(`Deleted dev-icon-32.png frm prod build`)
+      );
+      fs.rm(resolve(outDir, 'dev-icon-128.png'), () =>
+        console.log(`Deleted dev-icon-128.png frm prod build`)
+      );
+    },
+  };
 }
 
 export default defineConfig({
@@ -54,14 +58,20 @@ export default defineConfig({
       manifest: extensionManifest as ManifestV3Export,
       contentScripts: {
         injectCss: true,
-      }
+      },
     }),
-    stripDevIcons(isDev)
+    stripDevIcons(isDev),
   ],
   publicDir,
   build: {
     outDir,
     sourcemap: isDev,
-    emptyOutDir: !isDev
+    emptyOutDir: !isDev,
+    rollupOptions: {
+      input: {
+        popup: resolve(pagesDir, 'popup', 'index.html'),
+        offscreen: resolve(pagesDir, 'background', 'offscreen.html'),
+      },
+    },
   },
 });

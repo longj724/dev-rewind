@@ -1,12 +1,10 @@
-console.log('offscreen');
-
-chrome.runtime.onMessage.addListener((message, sender) => {
-  console.log('offscreen message received', message, sender);
+chrome.runtime.onMessage.addListener(async (message) => {
+  // console.log('offscreen message received', message, sender);
 
   switch (message.type) {
     case 'start-recording':
-      console.log('offscreen start recording', message.recordType);
-      startRecording(message.streamId);
+      // console.log('offscreen start recording', message.recordType);
+      await startRecording(message.streamId);
       break;
     case 'stop-recording':
       console.log('offscreen stop recording');
@@ -39,8 +37,6 @@ async function startRecording(streamId: string) {
     if (recorder?.state === 'recording') {
       throw new Error('Called startRecording while recording is in progress.');
     }
-
-    console.log('start recording', streamId);
 
     // Use the tabCaptured streamId
     const media = await navigator.mediaDevices.getUserMedia({
