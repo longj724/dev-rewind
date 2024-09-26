@@ -7,31 +7,27 @@ chrome.runtime.onMessage.addListener(async (message) => {
       await startRecording(message.streamId);
       break;
     case 'stop-recording':
-      console.log('offscreen stop recording');
       stopRecording();
       break;
     default:
-      console.log('default');
+      break;
   }
 
   return true;
 });
 
-// @ts-expect-error - js files are not shared
 let recorder: MediaRecorder;
 const data: Blob[] = [];
 
-// @ts-expect-error - js files are not shared
 async function stopRecording() {
   if (recorder?.state === 'recording') {
+    console.log('stopping recorder');
     recorder.stop();
 
-    // Stop all streams
     recorder.stream.getTracks().forEach((t) => t.stop());
   }
 }
 
-// @ts-expect-error - js files are not shared
 async function startRecording(streamId: string) {
   try {
     if (recorder?.state === 'recording') {
@@ -39,12 +35,6 @@ async function startRecording(streamId: string) {
     }
 
     const media = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        mandatory: {
-          chromeMediaSource: 'tab',
-          chromeMediaSourceId: streamId,
-        },
-      } as MediaTrackConstraints,
       video: {
         mandatory: {
           chromeMediaSource: 'tab',
@@ -53,20 +43,9 @@ async function startRecording(streamId: string) {
       } as MediaTrackConstraints,
     });
 
-    // Get microphone audio
-    const microphone = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false },
-    });
-    // Combine the streams
-    const mixedContext = new AudioContext();
-    const mixedDest = mixedContext.createMediaStreamDestination();
-
-    mixedContext.createMediaStreamSource(microphone).connect(mixedDest);
-    mixedContext.createMediaStreamSource(media).connect(mixedDest);
-
     const combinedStream = new MediaStream([
       media.getVideoTracks()[0],
-      mixedDest.stream.getTracks()[0],
+      // mixedDest.stream.getTracks()[0],
     ]);
 
     recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
@@ -80,14 +59,23 @@ async function startRecording(streamId: string) {
     // listen for when recording stops
     recorder.onstop = async () => {
       console.log('recording stopped');
-      // send the data to the service worker
-      console.log('sending data to service worker');
 
-      // convert this into a blog and open window
+      // convert this into a blob
       const blob = new Blob(data, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
-      // Send message to service worker to open tab
-      chrome.runtime.sendMessage({ action: 'open-tab', url });
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+
+        chrome.runtime.sendMessage({
+          action: 'open-tab',
+          videoUrl: url,
+          base64: base64data,
+        });
+      };
+      reader.readAsDataURL(blob); // This will trigger onloadend
     };
 
     // start recording

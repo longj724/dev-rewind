@@ -71,6 +71,7 @@ export default defineConfig({
       input: {
         popup: resolve(pagesDir, 'popup', 'index.html'),
         offscreen: resolve(pagesDir, 'background', 'offscreen.html'),
+        video: resolve(pagesDir, 'background', 'video.html'),
       },
     },
   },

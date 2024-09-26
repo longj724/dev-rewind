@@ -62,13 +62,13 @@ const recordTabState = async (start = true) => {
 };
 
 const openTabWithVideo = async (request: RequestMessage) => {
-  console.log('request to open tab with video');
+  console.log('request to open tab with video', request);
 
   const { videoUrl, base64 } = request;
 
   if (!videoUrl || !base64) return;
 
-  const url = chrome.runtime.getURL('video.html');
+  const url = chrome.runtime.getURL('src/pages/background/video.html');
   const newTab = await chrome.tabs.create({ url });
 
   if (!newTab.id) return;
@@ -76,7 +76,7 @@ const openTabWithVideo = async (request: RequestMessage) => {
   setTimeout(() => {
     // @ts-expect-error - Checking if id exists but ts isn't recognizing it
     chrome.tabs.sendMessage(newTab.id, {
-      type: 'play-video',
+      action: 'play-video',
       videoUrl,
       base64,
     });

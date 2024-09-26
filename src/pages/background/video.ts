@@ -37,9 +37,9 @@ const playVideo = (message: RequestMessage) => {
 };
 
 chrome.runtime.onMessage.addListener((message) => {
+  console.log('play video', message);
   switch (message.action) {
     case 'play-video':
-      console.log('play video', message);
       playVideo(message);
       break;
     default:
