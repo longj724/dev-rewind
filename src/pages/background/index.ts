@@ -1,64 +1,22 @@
 // External Dependencies
 
 // Relative Dependencies
-import { RecordingType, RequestMessage } from './types';
+import { RequestMessage } from './types';
 
-const checkRecording = async (): Promise<[boolean, RecordingType]> => {
-  const recording = await chrome.storage.local.get(['recording', 'type']);
-  console.log('recording', recording);
-  const recordingStatus = recording.recording || false;
-  const recordingType = recording.type || '';
-
-  console.log('recording status', recordingStatus, recordingType);
-  return [recordingStatus, recordingType];
+const updateRecording = async (isRecording: boolean) => {
+  chrome.storage.local.set({ isRecording });
 };
 
-const updateRecording = async (isRecording: boolean, type: RecordingType) => {
-  console.log('update recording', type);
-  chrome.storage.local.set({ recording: isRecording, type });
-};
-
-// Listen for changes to the focused / current tab
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  console.log('tab activated', activeInfo);
-
-  // Grab the tab
-  const activeTab = await chrome.tabs.get(activeInfo.tabId);
-  if (!activeTab || !activeTab.url) return;
-
-  const tabUrl = activeTab.url;
-
-  // If chrome or extension page, return
-  if (
-    tabUrl.startsWith('chrome://') ||
-    tabUrl.startsWith('chrome-extension://')
-  ) {
-    console.log('chrome or extension page - exiting');
-    return;
-  }
-
-  // Check if we are recording & if we are recording the scren
-  const [recording, recordingType] = await checkRecording();
-
-  console.log('recording check after tab change', {
-    recording,
-    recordingType,
-    tabUrl,
-  });
-
-  // removeCamera();
-});
-
-const startRecording = async (type: RecordingType) => {
-  updateRecording(true, type);
+const startRecording = async () => {
+  updateRecording(true);
+  // TODO: Get right icon path
   // chrome.action.setIcon({ path: '../../public/recording.png' });
-  if (type === 'tab') {
-    recordTabState();
-  }
+  recordTabState();
 };
 
 const stopRecording = async () => {
-  updateRecording(false, 'stopped');
+  updateRecording(false);
+  // TODO: Get right icon path
   // chrome.action.setIcon({ path: '../../public/not-recording.png' });
   recordTabState(false);
 };
@@ -82,28 +40,22 @@ const recordTabState = async (start = true) => {
 
   if (start) {
     const tab = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab[0].id) return;
-
-    const tabId = tab[0].id;
-
-    // const exists = await chrome.offscreen.hasDocument();
-    // console.log('offscreen document exists', exists);
+    if (!tab || !tab[0]?.id) return;
 
     chrome.tabCapture.getMediaStreamId(
-      { targetTabId: tabId },
+      { targetTabId: tab[0].id },
       async (streamId) => {
-        const res = await chrome.runtime.sendMessage({
-          type: 'start-recording',
+        await chrome.runtime.sendMessage({
+          action: 'start-recording',
           target: 'offscreen',
           recordType: 'tab',
           streamId,
         });
-        console.log('offscreen message response', res);
       }
     );
   } else {
     chrome.runtime.sendMessage({
-      type: 'stop-recording',
+      action: 'stop-recording',
       target: 'offscreen',
     });
   }
@@ -121,7 +73,6 @@ const openTabWithVideo = async (request: RequestMessage) => {
 
   if (!newTab.id) return;
 
-  // Send message to tab
   setTimeout(() => {
     // @ts-expect-error - Checking if id exists but ts isn't recognizing it
     chrome.tabs.sendMessage(newTab.id, {
@@ -132,21 +83,33 @@ const openTabWithVideo = async (request: RequestMessage) => {
   }, 500);
 };
 
-chrome.runtime.onMessage.addListener((request: RequestMessage) => {
+const getRecordingState = async () => {
+  const result = await chrome.storage.local.get('isRecording');
+  return result.isRecording || false;
+};
+chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
   console.log('request', request);
-  switch (request.message) {
+  let isRecording = false;
+
+  switch (request.action) {
+    case 'get-recording-state':
+      isRecording = await getRecordingState();
+      console.log('isRecording in get-recording-state', isRecording);
+      chrome.runtime.sendMessage({
+        action: 'recording-state-changed',
+        isRecording,
+      });
+      break;
     case 'open-tab':
       openTabWithVideo(request);
       break;
     case 'start-recording':
       if (request.recordingType) {
-        startRecording(request.recordingType);
+        startRecording();
       }
       break;
     case 'stop-recording':
-      if (request.recordingType === 'stopped') {
-        stopRecording();
-      }
+      stopRecording();
       break;
     default:
       break;

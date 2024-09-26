@@ -1,39 +1,51 @@
 // External Dependencies
-import { useState } from 'react';
-import {
-  Camera,
-  CircleStop,
-  EyeOff,
-  HelpCircle,
-  Home,
-  Maximize2,
-  Menu,
-  Video,
-} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { CircleStop, Video } from 'lucide-react';
 
 // Relative Dependencies
 import { Button } from '../components/button';
-// import { Card, CardHeader, CardTitle, CardContent } from '../components/card';
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from '../components/select';
+
+interface Message {
+  action: string;
+  isRecording: boolean;
+}
 
 export default function Popup(): JSX.Element {
   const [isRecording, setIsRecording] = useState(false);
 
+  const checkRecordingState = useCallback(() => {
+    chrome.runtime.sendMessage({ action: 'get-recording-state' });
+  }, []);
+
+  useEffect(() => {
+    checkRecordingState();
+
+    const messageListener = (message: Message) => {
+      console.log('message', message);
+      if (
+        message.action === 'recording-state-changed' &&
+        message.isRecording !== undefined
+      ) {
+        setIsRecording(message.isRecording);
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(messageListener);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener);
+    };
+  }, []);
+
   const toggleRecording = () => {
     if (!isRecording) {
       chrome.runtime.sendMessage({
-        message: 'start-recording',
+        action: 'start-recording',
         recordingType: 'tab',
       });
     } else {
       chrome.runtime.sendMessage({
-        message: 'stop-recording',
+        action: 'stop-recording',
         recordingType: 'tab',
       });
     }
@@ -62,29 +74,6 @@ export default function Popup(): JSX.Element {
         )}
         {isRecording ? 'Stop Recording' : 'Record Tab'}
       </Button>
-      {/* <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="flex flex-row items-center justify-center">
-          <CardTitle className="text-xl font-bold">DevRewind</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Select>
-            <SelectTrigger className="w-full">
-              <Maximize2 className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Set Recording Dimensions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="current">Current</SelectItem>
-              <SelectItem value="full">Full Screen</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" className="w-full justify-start">
-            <EyeOff className="mr-2 h-4 w-4" />
-            Hide Sensitive Data
-          </Button>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }

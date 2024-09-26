@@ -14,7 +14,7 @@ chrome.storage.local.get(['videoUrl'], (result) => {
   if (result.videoUrl) {
     console.log('play video from storage', result);
     const message: RequestMessage = {
-      message: 'play-video',
+      action: 'play-video',
       videoUrl: result.videoUrl,
     };
     playVideo(message);
@@ -37,7 +37,7 @@ const playVideo = (message: RequestMessage) => {
 };
 
 chrome.runtime.onMessage.addListener((message) => {
-  switch (message.type) {
+  switch (message.action) {
     case 'play-video':
       console.log('play video', message);
       playVideo(message);

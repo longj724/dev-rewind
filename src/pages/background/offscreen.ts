@@ -1,7 +1,7 @@
 chrome.runtime.onMessage.addListener(async (message) => {
   // console.log('offscreen message received', message, sender);
 
-  switch (message.type) {
+  switch (message.action) {
     case 'start-recording':
       // console.log('offscreen start recording', message.recordType);
       await startRecording(message.streamId);
@@ -38,7 +38,6 @@ async function startRecording(streamId: string) {
       throw new Error('Called startRecording while recording is in progress.');
     }
 
-    // Use the tabCaptured streamId
     const media = await navigator.mediaDevices.getUserMedia({
       audio: {
         mandatory: {
@@ -88,7 +87,7 @@ async function startRecording(streamId: string) {
       const blob = new Blob(data, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
       // Send message to service worker to open tab
-      chrome.runtime.sendMessage({ type: 'open-tab', url });
+      chrome.runtime.sendMessage({ action: 'open-tab', url });
     };
 
     // start recording

@@ -1,7 +1,12 @@
 export type RecordingType = 'tab' | 'stopped';
 
 export type RequestMessage = {
-  message: 'open-tab' | 'start-recording' | 'stop-recording' | 'play-video';
+  action:
+    | 'open-tab'
+    | 'start-recording'
+    | 'stop-recording'
+    | 'play-video'
+    | 'get-recording-state';
   videoUrl?: string;
   base64?: string;
   recordingType?: RecordingType;
