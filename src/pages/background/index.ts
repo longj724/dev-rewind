@@ -1,7 +1,7 @@
 // External Dependencies
 
 // Relative Dependencies
-import { RequestMessage } from './types';
+import { ConsoleMessageInfo, RequestMessage } from './types';
 
 const updateRecording = async (isRecording: boolean) => {
   chrome.storage.local.set({ isRecording });
@@ -73,15 +73,20 @@ const openTabWithVideo = async (request: RequestMessage) => {
 
   if (!newTab.id) return;
 
+  console.log('capturedConsoleMessages', capturedConsoleMessages);
+
   setTimeout(() => {
     // @ts-expect-error - Checking if id exists but ts isn't recognizing it
     chrome.tabs.sendMessage(newTab.id, {
       action: 'play-video',
       videoUrl,
       base64,
+      consoleMessages: capturedConsoleMessages,
     });
   }, 500);
 };
+
+let capturedConsoleMessages: ConsoleMessageInfo[] = [];
 
 const getRecordingState = async () => {
   const result = await chrome.storage.local.get('isRecording');
@@ -94,7 +99,6 @@ chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
   switch (request.action) {
     case 'get-recording-state':
       isRecording = await getRecordingState();
-      console.log('isRecording in get-recording-state', isRecording);
       chrome.runtime.sendMessage({
         action: 'recording-state-changed',
         isRecording,
@@ -104,12 +108,21 @@ chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
       openTabWithVideo(request);
       break;
     case 'start-recording':
+      capturedConsoleMessages = [];
       if (request.recordingType) {
         startRecording();
       }
       break;
     case 'stop-recording':
       stopRecording();
+      break;
+    case 'console-message':
+      console.log('console-message', request);
+      isRecording = await getRecordingState();
+
+      if (isRecording && request.consoleMessageInfo) {
+        capturedConsoleMessages.push(request.consoleMessageInfo);
+      }
       break;
     default:
       break;

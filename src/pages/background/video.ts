@@ -1,18 +1,18 @@
 // External Dependencies
 
 // Relative Dependencies
-import { RequestMessage } from './types';
+import { ConsoleMessageInfo, RequestMessage } from './types';
 
-// To save the video to local storage
+let capturedConsoleMessages: ConsoleMessageInfo[] = [];
+let videoStartTime: number;
+
 const saveVideo = (videoUrl: string) => {
   chrome.storage.local.set({ videoUrl });
 };
 
 // On page open, check if there is a video url
 chrome.storage.local.get(['videoUrl'], (result) => {
-  console.log('video url', result);
   if (result.videoUrl) {
-    console.log('play video from storage', result);
     const message: RequestMessage = {
       action: 'play-video',
       videoUrl: result.videoUrl,
@@ -29,11 +29,30 @@ const playVideo = (message: RequestMessage) => {
   if (!videoElement) return;
   const url = (message?.videoUrl || message?.base64) as string;
 
-  // Update the saved video url
   saveVideo(url);
 
   videoElement.src = url;
   videoElement.play();
+
+  capturedConsoleMessages =
+    message?.capturedConsoleMessages as ConsoleMessageInfo[];
+
+  videoElement.addEventListener('timeupdate', onVideoTimeUpdate);
+  videoStartTime = Date.now();
+};
+
+const onVideoTimeUpdate = (event: Event) => {
+  const videoElement = event.target as HTMLVideoElement;
+  console.log('video current time', videoElement.currentTime);
+  const currentVideoTime = videoElement.currentTime * 1000; // Convert to milliseconds
+  const currentTimestamp = videoStartTime + currentVideoTime;
+
+  capturedConsoleMessages.forEach(({ message, timestamp, type }) => {
+    if (timestamp < currentTimestamp) {
+      console.log('message', message);
+      console.log('type', type);
+    }
+  });
 };
 
 chrome.runtime.onMessage.addListener((message) => {

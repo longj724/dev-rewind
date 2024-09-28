@@ -6,8 +6,17 @@ export type RequestMessage = {
     | 'start-recording'
     | 'stop-recording'
     | 'play-video'
-    | 'get-recording-state';
+    | 'get-recording-state'
+    | 'console-message';
   videoUrl?: string;
   base64?: string;
   recordingType?: RecordingType;
+  consoleMessageInfo?: ConsoleMessageInfo;
+  capturedConsoleMessages?: ConsoleMessageInfo[];
+};
+
+export type ConsoleMessageInfo = {
+  message: string;
+  type: 'log' | 'error' | 'warn';
+  timestamp: number;
 };
