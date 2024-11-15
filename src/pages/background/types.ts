@@ -17,6 +17,6 @@ export type RequestMessage = {
 
 export type ConsoleMessageInfo = {
   message: string;
-  type: 'log' | 'error' | 'warn';
+  type: 'log' | 'info' | 'warn' | 'error';
   timestamp: number;
 };

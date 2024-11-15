@@ -117,7 +117,7 @@ chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
       stopRecording();
       break;
     case 'console-message':
-      console.log('console-message', request);
+      console.log('console-message received:', request);
       isRecording = await getRecordingState();
 
       if (isRecording && request.consoleMessageInfo) {

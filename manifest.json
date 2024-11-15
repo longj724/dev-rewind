@@ -37,8 +37,11 @@
   "devtools_page": "src/pages/devtools/index.html",
   "web_accessible_resources": [
     {
-      "resources": ["camera.html", "camera.ts", "video.html", "video.ts"],
-      "matches": ["https://*/*", "http://*/*"]
+      "resources": ["consoleCapture.js"],
+      "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
 }
