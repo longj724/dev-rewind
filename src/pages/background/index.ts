@@ -62,8 +62,6 @@ const recordTabState = async (start = true) => {
 };
 
 const openTabWithVideo = async (request: RequestMessage) => {
-  console.log('request to open tab with video', request);
-
   const { videoUrl, base64 } = request;
 
   if (!videoUrl || !base64) return;
@@ -81,7 +79,7 @@ const openTabWithVideo = async (request: RequestMessage) => {
       action: 'play-video',
       videoUrl,
       base64,
-      consoleMessages: capturedConsoleMessages,
+      capturedConsoleMessages: capturedConsoleMessages,
     });
   }, 500);
 };
@@ -93,7 +91,6 @@ const getRecordingState = async () => {
   return result.isRecording || false;
 };
 chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
-  console.log('request', request);
   let isRecording = false;
 
   switch (request.action) {
@@ -117,7 +114,6 @@ chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
       stopRecording();
       break;
     case 'console-message':
-      console.log('console-message received:', request);
       isRecording = await getRecordingState();
 
       if (isRecording && request.consoleMessageInfo) {

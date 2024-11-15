@@ -61,18 +61,6 @@ export default defineConfig({
       },
     }),
     stripDevIcons(isDev),
-    {
-      name: 'copy-console-capture',
-      buildStart() {
-        this.emitFile({
-          type: 'asset',
-          fileName: 'consoleCapture.js',
-          source: `
-            (${initConsoleCapture.toString()})();
-          `,
-        });
-      },
-    },
   ],
   publicDir,
   build: {
@@ -93,44 +81,3 @@ export default defineConfig({
     },
   },
 });
-
-function initConsoleCapture() {
-  const originalConsole = {
-    log: window.console.log,
-    info: window.console.info,
-    warn: window.console.warn,
-    error: window.console.error,
-  };
-
-  const createConsoleOverride = (type) => {
-    return (...args) => {
-      originalConsole[type].apply(console, args);
-      const messageInfo = {
-        message: args
-          .map((arg) => {
-            try {
-              return typeof arg === 'object'
-                ? JSON.stringify(arg)
-                : String(arg);
-            } catch (e) {
-              return '[Unable to stringify]';
-            }
-          })
-          .join(' '),
-        type,
-        timestamp: Date.now(),
-        stackTrace: new Error().stack,
-      };
-      window.dispatchEvent(
-        new CustomEvent('console-message', {
-          detail: messageInfo,
-        })
-      );
-    };
-  };
-
-  console.log = createConsoleOverride('log');
-  console.info = createConsoleOverride('info');
-  console.warn = createConsoleOverride('warn');
-  console.error = createConsoleOverride('error');
-}
