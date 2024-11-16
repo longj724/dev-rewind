@@ -5,7 +5,7 @@ export type RequestMessage = {
     | 'open-tab'
     | 'start-recording'
     | 'stop-recording'
-    | 'play-video'
+    | 'load-video'
     | 'get-recording-state'
     | 'console-message';
   videoUrl?: string;
@@ -14,6 +14,7 @@ export type RequestMessage = {
   consoleMessageInfo?: ConsoleMessageInfo;
   capturedConsoleMessages?: ConsoleMessageInfo[];
   recordingStartTime?: number;
+  recordingEndTime?: number;
 };
 
 export type ConsoleMessageInfo = {

@@ -4,6 +4,7 @@
 import { ConsoleMessageInfo, RequestMessage } from './types';
 
 let recordingStartTime = 0;
+let recordingEndTime = 0;
 
 const updateRecording = async (isRecording: boolean) => {
   chrome.storage.local.set({ isRecording });
@@ -19,6 +20,7 @@ const startRecording = async () => {
 
 const stopRecording = async () => {
   updateRecording(false);
+  recordingEndTime = Date.now();
   // TODO: Get right icon path
   // chrome.action.setIcon({ path: '../../public/not-recording.png' });
   recordTabState(false);
@@ -79,11 +81,12 @@ const openTabWithVideo = async (request: RequestMessage) => {
   setTimeout(() => {
     // @ts-expect-error - Checking if id exists but ts isn't recognizing it
     chrome.tabs.sendMessage(newTab.id, {
-      action: 'play-video',
+      action: 'load-video',
       videoUrl,
       base64,
       capturedConsoleMessages: capturedConsoleMessages,
       recordingStartTime,
+      recordingEndTime,
     });
   }, 500);
 };

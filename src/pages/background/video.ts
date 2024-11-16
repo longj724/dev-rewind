@@ -13,7 +13,7 @@ const saveVideo = (videoUrl: string) => {
 chrome.storage.local.get(['videoUrl'], (result) => {
   if (result.videoUrl) {
     const message: RequestMessage = {
-      action: 'play-video',
+      action: 'load-video',
       videoUrl: result.videoUrl,
     };
     playVideo(message);
@@ -56,7 +56,7 @@ const onVideoTimeUpdate = (event: Event) => {
 chrome.runtime.onMessage.addListener((message) => {
   console.log('play video', message);
   switch (message.action) {
-    case 'play-video':
+    case 'load-video':
       playVideo(message);
       break;
     default:
