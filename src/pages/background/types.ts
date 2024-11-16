@@ -13,6 +13,7 @@ export type RequestMessage = {
   recordingType?: RecordingType;
   consoleMessageInfo?: ConsoleMessageInfo;
   capturedConsoleMessages?: ConsoleMessageInfo[];
+  recordingStartTime?: number;
 };
 
 export type ConsoleMessageInfo = {

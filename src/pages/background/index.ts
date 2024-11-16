@@ -3,12 +3,15 @@
 // Relative Dependencies
 import { ConsoleMessageInfo, RequestMessage } from './types';
 
+let recordingStartTime = 0;
+
 const updateRecording = async (isRecording: boolean) => {
   chrome.storage.local.set({ isRecording });
 };
 
 const startRecording = async () => {
   updateRecording(true);
+  recordingStartTime = Date.now();
   // TODO: Get right icon path
   // chrome.action.setIcon({ path: '../../public/recording.png' });
   recordTabState();
@@ -80,6 +83,7 @@ const openTabWithVideo = async (request: RequestMessage) => {
       videoUrl,
       base64,
       capturedConsoleMessages: capturedConsoleMessages,
+      recordingStartTime,
     });
   }, 500);
 };

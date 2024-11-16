@@ -10,7 +10,6 @@ const saveVideo = (videoUrl: string) => {
   chrome.storage.local.set({ videoUrl });
 };
 
-// On page open, check if there is a video url
 chrome.storage.local.get(['videoUrl'], (result) => {
   if (result.videoUrl) {
     const message: RequestMessage = {
@@ -43,13 +42,12 @@ const playVideo = (message: RequestMessage) => {
 
 const onVideoTimeUpdate = (event: Event) => {
   const videoElement = event.target as HTMLVideoElement;
-  console.log('video current time', videoElement.currentTime);
   const currentVideoTime = videoElement.currentTime * 1000; // Convert to milliseconds
   const currentTimestamp = videoStartTime + currentVideoTime;
 
   capturedConsoleMessages.forEach(({ message, timestamp, type }) => {
     if (timestamp < currentTimestamp) {
-      console.log('message', message);
+      console.log('message here is', message);
       console.log('type', type);
     }
   });
