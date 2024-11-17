@@ -1,6 +1,6 @@
 // External Dependencies
 import { useEffect, useState, useRef } from 'react';
-import { Volume2, VolumeX, Pause, Play, Maximize2 } from 'lucide-react';
+import { Volume2, VolumeX, Pause, Play } from 'lucide-react';
 
 // Internal Dependencies
 import { Button } from '../components/button';
@@ -14,6 +14,14 @@ import {
   TableRow,
 } from '../components/table';
 import { ScrollArea } from '../components/scroll-area';
+import { Badge } from '../components/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/select';
 import { ConsoleMessageInfo, RequestMessage } from './types';
 import '@assets/styles/tailwind.css';
 
@@ -30,7 +38,13 @@ const VideoPlayer = () => {
     ConsoleMessageInfoWithTime[]
   >([]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [filter, setFilter] = useState('all');
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lastMessageRef = useRef<HTMLTableRowElement>(null);
+
+  const visibleMessages = consoleMessages
+    .filter((msg) => msg.offset <= currentOffset)
+    .filter((msg) => filter === 'all' || msg.type === filter);
 
   const roundToNearestThousand = (num: number) => {
     return Math.round(num / 1000) * 1000;
@@ -46,21 +60,8 @@ const VideoPlayer = () => {
       videoElement.currentTime * 1000
     );
 
-    console.log('currentTime', videoRef.current?.currentTime);
-
     setCurrentTime(videoRef.current?.currentTime || 0);
     setCurrentOffset(currentOffsetTime);
-
-    // capturedConsoleMessages.forEach(({ message, offset }) => {
-    //   if (currentVideoTime === offset) {
-    //     console.log(
-    //       'message when equal is',
-    //       message,
-    //       'time is:',
-    //       currentVideoTime
-    //     );
-    //   }
-    // });
   };
 
   const loadVideo = (message: RequestMessage) => {
@@ -113,6 +114,12 @@ const VideoPlayer = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [visibleMessages]);
+
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -147,7 +154,7 @@ const VideoPlayer = () => {
   return (
     <div className="flex h-screen bg-background">
       {/* Video Section (2/3) */}
-      <div className="w-2/3 p-4">
+      <div className="w-2/3 p-4 flex items-center">
         <div className="relative rounded-lg overflow-hidden bg-black">
           <video ref={videoRef} className="w-full aspect-video" />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -155,7 +162,7 @@ const VideoPlayer = () => {
               value={[currentTime]}
               max={duration}
               step={0.1}
-              className="mb-4"
+              className="mb-4 hover:cursor-pointer"
               onValueChange={([value]) => {
                 if (videoRef.current) {
                   console.log('value', value);
@@ -191,13 +198,6 @@ const VideoPlayer = () => {
               <span className="text-white text-sm">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-auto text-white hover:bg-white/20"
-              >
-                <Maximize2 className="h-5 w-5" />
-              </Button>
             </div>
           </div>
         </div>
@@ -205,8 +205,20 @@ const VideoPlayer = () => {
 
       <div className="w-1/3 border-l">
         <div className="bg-zinc-900 text-white h-full">
-          <div className="p-2 border-b bg-zinc-800 font-mono text-sm">
-            Console
+          <div className="p-2 border-b bg-zinc-800 font-mono text-sm flex justify-between items-center">
+            <span>Console</span>
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-[180px] bg-zinc-700 text-white border-zinc-600">
+                <SelectValue placeholder="Filter logs" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All logs</SelectItem>
+                <SelectItem value="log">Log</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
+                <SelectItem value="warn">Warning</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <ScrollArea className="h-[calc(100vh-40px)]">
             <Table>
@@ -216,30 +228,44 @@ const VideoPlayer = () => {
                   <TableHead className="text-zinc-400">Message</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="text-xs">
                 {currentTime !== 0 &&
-                  consoleMessages
-                    .filter((msg) => msg.offset <= currentOffset)
-                    .map((msg, index) => (
-                      <TableRow key={index} className="hover:bg-zinc-800/50">
-                        <TableCell className="text-zinc-400 font-mono">
+                  visibleMessages.map((msg, index) => (
+                    <TableRow
+                      key={index}
+                      className="hover:bg-zinc-800/50"
+                      ref={
+                        index === visibleMessages.length - 1
+                          ? lastMessageRef
+                          : null
+                      }
+                    >
+                      <TableCell className="text-zinc-400 font-mono">
+                        <div className="flex flex-col gap-1 items-center">
                           {formatMillisecondsToTime(msg.offset)}
-                        </TableCell>
-                        <TableCell
-                          className={`font-mono ${
-                            msg.type === 'error'
-                              ? 'text-red-400'
-                              : msg.type === 'warn'
-                              ? 'text-yellow-400'
-                              : msg.type === 'info'
-                              ? 'text-blue-400'
-                              : 'text-white'
-                          }`}
-                        >
-                          {msg.message}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <Badge
+                            variant="default"
+                            className="w-fit bg-blue-400 hover:bg-blue-400"
+                          >
+                            {msg.type}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell
+                        className={`font-mono ${
+                          msg.type === 'error'
+                            ? 'text-red-400'
+                            : msg.type === 'warn'
+                            ? 'text-yellow-400'
+                            : msg.type === 'info'
+                            ? 'text-blue-400'
+                            : 'text-white'
+                        }`}
+                      >
+                        {msg.message}
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </ScrollArea>
