@@ -152,7 +152,7 @@ const VideoPlayer = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen max-h-[100vh] bg-background">
       {/* Video Section (2/3) */}
       <div className="w-2/3 p-4 flex items-center">
         <div className="relative rounded-lg overflow-hidden bg-black">
@@ -165,7 +165,6 @@ const VideoPlayer = () => {
               className="mb-4 hover:cursor-pointer"
               onValueChange={([value]) => {
                 if (videoRef.current) {
-                  console.log('value', value);
                   videoRef.current.currentTime = value;
                 }
               }}
@@ -220,7 +219,7 @@ const VideoPlayer = () => {
               </SelectContent>
             </Select>
           </div>
-          <ScrollArea className="h-[calc(100vh-40px)]">
+          <ScrollArea className="h-[calc(100vh-60px)]">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
