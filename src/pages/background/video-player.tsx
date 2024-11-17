@@ -73,6 +73,8 @@ const VideoPlayer = () => {
     setCurrentOffset(currentOffsetTime);
 
     if (videoElement.duration !== Infinity) setDuration(videoElement.duration);
+    if (videoElement.duration === videoRef.current?.currentTime)
+      setIsPlaying(false);
 
     setSliderPosition(videoRef.current?.currentTime || 0);
   };
