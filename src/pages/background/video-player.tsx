@@ -34,11 +34,13 @@ const VideoPlayer = () => {
   const [currentOffset, setCurrentOffset] = useState<number>(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [sliderPosition, setSliderPosition] = useState(0);
   const [consoleMessages, setConsoleMessages] = useState<
     ConsoleMessageInfoWithTime[]
   >([]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [filter, setFilter] = useState('all');
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastMessageRef = useRef<HTMLTableRowElement>(null);
 
@@ -62,6 +64,7 @@ const VideoPlayer = () => {
 
     setCurrentTime(videoRef.current?.currentTime || 0);
     setCurrentOffset(currentOffsetTime);
+    setSliderPosition(videoRef.current?.currentTime || 0);
   };
 
   const loadVideo = (message: RequestMessage) => {
@@ -152,18 +155,21 @@ const VideoPlayer = () => {
   };
 
   return (
-    <div className="flex h-screen max-h-[100vh] bg-background">
+    <div className="flex h-screen max-h-[100vh]">
       {/* Video Section (2/3) */}
       <div className="w-2/3 p-4 flex items-center">
         <div className="relative rounded-lg overflow-hidden bg-black">
           <video ref={videoRef} className="w-full aspect-video" />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
             <Slider
-              value={[currentTime]}
+              value={[sliderPosition]}
               max={duration}
               step={0.1}
               className="mb-4 hover:cursor-pointer"
               onValueChange={([value]) => {
+                setSliderPosition(value);
+              }}
+              onValueCommit={([value]) => {
                 if (videoRef.current) {
                   videoRef.current.currentTime = value;
                 }
