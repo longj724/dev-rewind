@@ -52,6 +52,13 @@ const VideoPlayer = () => {
     return Math.round(num / 1000) * 1000;
   };
 
+  const roundedDuration = (startTime: number, endTime: number) => {
+    const differenceInMilliseconds = endTime - startTime;
+    const differenceInSeconds = differenceInMilliseconds / 1000;
+    const roundedDifference = Math.round(differenceInSeconds * 10) / 10;
+    return roundedDifference;
+  };
+
   const saveVideo = (videoUrl: string) => {
     chrome.storage.local.set({ videoUrl });
   };
@@ -64,6 +71,9 @@ const VideoPlayer = () => {
 
     setCurrentTime(videoRef.current?.currentTime || 0);
     setCurrentOffset(currentOffsetTime);
+
+    if (videoElement.duration !== Infinity) setDuration(videoElement.duration);
+
     setSliderPosition(videoRef.current?.currentTime || 0);
   };
 
@@ -88,9 +98,10 @@ const VideoPlayer = () => {
     });
 
     setDuration(
-      ((message?.recordingEndTime as number) -
-        (message?.recordingStartTime as number)) /
-        1000
+      roundedDuration(
+        message?.recordingStartTime as number,
+        message?.recordingEndTime as number
+      )
     );
     setConsoleMessages(capturedConsoleMessagesWithTime);
 
@@ -156,7 +167,6 @@ const VideoPlayer = () => {
 
   return (
     <div className="flex h-screen max-h-[100vh]">
-      {/* Video Section (2/3) */}
       <div className="w-2/3 p-4 flex items-center">
         <div className="relative rounded-lg overflow-hidden bg-black">
           <video ref={videoRef} className="w-full aspect-video" />
@@ -167,9 +177,11 @@ const VideoPlayer = () => {
               step={0.1}
               className="mb-4 hover:cursor-pointer"
               onValueChange={([value]) => {
+                console.log('slider value is', value);
                 setSliderPosition(value);
               }}
               onValueCommit={([value]) => {
+                console.log('onValueCommit', value);
                 if (videoRef.current) {
                   videoRef.current.currentTime = value;
                 }
