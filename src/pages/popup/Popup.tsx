@@ -12,16 +12,26 @@ interface Message {
 
 export default function Popup(): JSX.Element {
   const [isRecording, setIsRecording] = useState(false);
+  const [tabId, setTabId] = useState<number | null>(null);
 
   const checkRecordingState = useCallback(() => {
     chrome.runtime.sendMessage({ action: 'get-recording-state' });
   }, []);
 
+  const getTabId = useCallback(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        setTabId(tabs[0].id || null);
+      }
+    });
+  }, []);
+
   useEffect(() => {
+    getTabId();
     checkRecordingState();
 
     const messageListener = (message: Message) => {
-      console.log('message', message);
+      console.log('message in popup is', message);
       if (
         message.action === 'recording-state-changed' &&
         message.isRecording !== undefined
@@ -42,6 +52,7 @@ export default function Popup(): JSX.Element {
       chrome.runtime.sendMessage({
         action: 'start-recording',
         recordingType: 'tab',
+        tabId,
       });
     } else {
       chrome.runtime.sendMessage({

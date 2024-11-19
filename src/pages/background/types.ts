@@ -15,6 +15,7 @@ export type RequestMessage = {
   capturedConsoleMessages?: ConsoleMessageInfo[];
   recordingStartTime?: number;
   recordingEndTime?: number;
+  tabId?: number;
 };
 
 export type ConsoleMessageInfo = {

@@ -114,7 +114,12 @@ chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
     case 'start-recording':
       capturedConsoleMessages = [];
       if (request.recordingType) {
-        startRecording();
+        await startRecording();
+
+        chrome.tabs.sendMessage(request.tabId as number, {
+          action: 'show-stop-button',
+          isRecording: true,
+        });
       }
       break;
     case 'stop-recording':
