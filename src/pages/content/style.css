@@ -1,6 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-.langin{
-    color: aliceblue;
+.langin {
+  color: aliceblue;
 }
+
+/* Add these styles to ensure the button appears above other content */
+/* #__root {
+  position: fixed;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+#__root > button {
+  pointer-events: auto;
+} */

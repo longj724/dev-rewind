@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-
+import DraggableStopButton from './DraggableStopButton';
 const div = document.createElement('div');
 div.id = '__root';
 document.body.appendChild(div);
@@ -25,7 +25,7 @@ injectConsoleCapture();
 const rootContainer = document.querySelector('#__root');
 if (!rootContainer) throw new Error("Can't find Content root element");
 const root = createRoot(rootContainer);
-root.render(<div className=""></div>);
+root.render(<DraggableStopButton />);
 
 try {
   console.log('content script loaded');

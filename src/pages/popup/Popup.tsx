@@ -58,6 +58,7 @@ export default function Popup(): JSX.Element {
       chrome.runtime.sendMessage({
         action: 'stop-recording',
         recordingType: 'tab',
+        tabId,
       });
     }
 

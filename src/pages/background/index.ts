@@ -124,6 +124,11 @@ chrome.runtime.onMessage.addListener(async (request: RequestMessage) => {
       break;
     case 'stop-recording':
       stopRecording();
+
+      chrome.tabs.sendMessage(request.tabId as number, {
+        action: 'hide-stop-button',
+        isRecording: false,
+      });
       break;
     case 'console-message':
       isRecording = await getRecordingState();
